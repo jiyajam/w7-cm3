@@ -12,7 +12,7 @@ const cors = require('cors')
 // Middlewares
 app.use(cors())
 app.use(express.json())
-
+cd
 connectDB()
 
 // Use the jobRouter for all "/jobs" routes
