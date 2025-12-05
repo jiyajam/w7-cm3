@@ -1,43 +1,14 @@
-const mongoose = require("mongoose")
-const supertest = require("supertest")
-const app = require("../app")
-const api = supertest(app)
-const Job = require("../models/jobModel")
-const User = require("../models/userModel")
+const mongoose = require("mongoose");
+const supertest = require("supertest");
+const app = require("../app");
+const api = supertest(app);
+const User = require("../models/userModel");
+const Job = require("../models/jobModel"); // Import Job model
 
-const jobs = [
+const users = [
   {
-    title: "Software Engineer",
-    type: "Full-time",
-    description: "Develop and maintain web applications using modern frameworks.",
-    company: {
-      name: "TechNova Solutions",
-      contactEmail: "hr@technova.com",
-      size: 250,
-    },
-    location: {
-      city: "San Francisco",
-      state: "CA",
-    },
-    salary: 120000,
-    experienceLevel: "Mid",
-    postedDate: new Date(),
-    status: "open",
-    applicationDeadline: new Date("2026-01-15"),
-    requirements: ["JavaScript", "React", "Node.js", "MongoDB"],
-  }
-]
-
-let token = null
-let user = null
-
-beforeAll(async () => {
-  await User.deleteMany({})
-  await Job.deleteMany({})
-
-  const res = await api.post("/api/users/signup").send({
-    name: "Test User",
-    username: "testuser",
+    name: "Alice Johnson",
+    username: "alicej",
     password: "Password123!",
     phone_number: "+358401234567",
     gender: "Female",
@@ -45,108 +16,202 @@ beforeAll(async () => {
     address: {
       street: "Keskuskatu 10",
       city: "Helsinki",
-      zipCode: "00100"
-    }
-  }).expect(201)
+      zipCode: "00100",
+    },
+  },
+];
 
-  token = res.body.token
-  user = await User.findOne({ username: "testuser" })
-})
+// Sample job data for testing
+const sampleJob = {
+  title: "Software Developer",
+  type: "Full-time",
+  description: "Develop amazing apps",
+  company: {
+    name: "Tech Solutions",
+    contactEmail: "hr@techsolutions.com",
+    size: "50",
+  },
+  location: {
+    city: "Espoo",
+    state: "Uusimaa",
+  },
+  salary: 5000,
+  experienceLevel: "Mid",
+  requirements: ["Node.js", "React"],
+};
 
 beforeEach(async () => {
-  await Job.deleteMany({})
-  await Job.insertMany(
-    jobs.map(job => ({
-      ...job,
-      user_id: user._id
-    }))
-  )
-})
+  // Clear both Users and Jobs before every test to ensure isolation
+  await User.deleteMany({});
+  await Job.deleteMany({});
+});
 
-//Get all jobs
-describe("Protected Job Routes", () => {
-  it("should return all jobs with a valid token", async () => {
-    const res = await api
-      .get("/api/jobs")
-      .set("Authorization", "Bearer " + token)
-      .expect(200)
+describe("Job Routes", () => {
+  let token;
+  let user;
 
-    expect(res.body).toHaveLength(jobs.length)
-  })
+  // Helper to create a user and get token before job tests
+  beforeEach(async () => {
+    const response = await api.post("/api/users/signup").send(users[0]);
+    token = response.body.token;
+    // We fetch the user from DB to get the _id for manual association if needed
+    user = await User.findOne({ username: users[0].username });
+  });
 
-  it("should return 401 if no token is provided", async () => {
-    await api.get("/api/jobs").expect(401)
-  })
-//POST /create job
-  it("should create one job with a valid token", async () => {
-    const newJob = {
-      title: "Data Analyst",
-      type: "Contract",
-      description: "Analyze datasets and generate insights for business decisions.",
-      company: {
-        name: "Insight Analytics",
-        contactEmail: "jobs@insightanalytics.com",
-        size: 80,
-      },
-      location: {
-        city: "New York",
-        state: "NY",
-      },
-      salary: 70000,
-      experienceLevel: "Entry",
-      postedDate: new Date(),
-      status: "open",
-      applicationDeadline: new Date("2026-02-01"),
-      requirements: ["SQL", "Python", "Excel", "Data Visualization"],
-    }
+  describe("POST /api/jobs", () => {
+    it("should create a new job when authenticated", async () => {
+      const response = await api
+        .post("/api/jobs")
+        .set("Authorization", `Bearer ${token}`) // Assuming Bearer auth scheme
+        .send(sampleJob)
+        .expect(201)
+        .expect("Content-Type", /application\/json/);
 
-    const res = await api
-      .post("/api/jobs")
-      .set("Authorization", "Bearer " + token)
-      .send(newJob)
-      .expect(201)
+      // Verify response structure
+      expect(response.body).toHaveProperty("_id");
+      expect(response.body.title).toBe(sampleJob.title);
+      expect(response.body.company.name).toBe(sampleJob.company.name);
 
-    expect(res.body.title).toBe(newJob.title)
-  })
-//GET /job by id
-  it("should return one job by ID", async () => {
-    const job = await Job.findOne()
-    const res = await api
-      .get(`/api/jobs/${job._id}`)
-      .set("Authorization", "Bearer " + token)
-      .expect(200)
+      // Verify job is actually in database
+      const jobsAtEnd = await Job.find({});
+      expect(jobsAtEnd).toHaveLength(1);
+      expect(jobsAtEnd[0].title).toBe(sampleJob.title);
+    });
 
-    expect(res.body.title).toBe(job.title)
-  })
+    it("should fail with 401/403 if token is missing", async () => {
+      await api.post("/api/jobs").send(sampleJob).expect(401); // Or 403 depending on your auth middleware setup
+    });
 
-  it("should update one job by ID with a valid token", async () => {
-    const job = await Job.findOne()
-    const updatedJob = { type: "Full-Time" }
+    it("should fail with 500 if required fields are missing", async () => {
+      // Sending empty object to trigger validation error
+      await api
+        .post("/api/jobs")
+        .set("Authorization", `Bearer ${token}`)
+        .send({})
+        .expect(500);
+    });
+  });
 
-    const res = await api
-      .put(`/api/jobs/${job._id}`)
-      .set("Authorization", "Bearer " + token)
-      .send(updatedJob)
-      .expect(200)
+  describe("GET /api/jobs", () => {
+    it("should retrieve all jobs (public access)", async () => {
+      // Create a job directly in DB first
+      const job = new Job({ ...sampleJob, userId: user._id });
+      await job.save();
 
-    expect(res.body.type).toBe(updatedJob.type)
+      const response = await api
+        .get("/api/jobs")
+        .expect(200)
+        .expect("Content-Type", /application\/json/);
 
-    const updatedJobCheck = await Job.findById(job._id)
-    expect(updatedJobCheck.type).toBe(updatedJob.type)
-  })
-//DELETE /job by id
-  it("should delete one job by ID", async () => {
-    const job = await Job.findOne()
-    await api
-      .delete(`/api/jobs/${job._id}`)
-      .set("Authorization", "Bearer " + token)
-      .expect(204)
+      expect(response.body).toHaveLength(1);
+      expect(response.body[0].title).toBe(sampleJob.title);
+    });
+  });
 
-    const jobCheck = await Job.findById(job._id)
-    expect(jobCheck).toBeNull()
-  })
-})
+  describe("GET /api/jobs/:id", () => {
+    it("should retrieve a specific job by ID (public access)", async () => {
+      const job = new Job({ ...sampleJob, userId: user._id });
+      const savedJob = await job.save();
+
+      const response = await api.get(`/api/jobs/${savedJob._id}`).expect(200);
+
+      expect(response.body.title).toBe(sampleJob.title);
+    });
+
+    it("should return 400 for invalid mongo ID", async () => {
+      await api.get("/api/jobs/123-invalid-id").expect(400);
+    });
+
+    it("should return 404 if job does not exist", async () => {
+      const nonExistentId = new mongoose.Types.ObjectId();
+      await api.get(`/api/jobs/${nonExistentId}`).expect(404);
+    });
+  });
+
+  describe("PUT /api/jobs/:id", () => {
+    it("should update a job if the user is the owner", async () => {
+      const job = new Job({ ...sampleJob, userId: user._id });
+      const savedJob = await job.save();
+
+      const updates = { title: "Updated Developer", salary: 6000 };
+
+      const response = await api
+        .put(`/api/jobs/${savedJob._id}`)
+        .set("Authorization", `Bearer ${token}`)
+        .send(updates)
+        .expect(200);
+
+      expect(response.body.title).toBe("Updated Developer");
+      expect(response.body.salary).toBe(6000);
+    });
+
+    it("should fail (404/Unauthorized) if trying to update someone else's job", async () => {
+      // 1. Create a second user and login
+      const secondUserRes = await api.post("/api/users/signup").send({
+        ...users[0],
+        username: "user2",
+        name: "User Two",
+      });
+      const secondToken = secondUserRes.body.token;
+
+      // 2. Original user owns the job
+      const job = new Job({ ...sampleJob, userId: user._id });
+      const savedJob = await job.save();
+
+      // 3. Second user tries to update it
+      // Controller returns 404 because query is { _id: jobId, userId }
+      await api
+        .put(`/api/jobs/${savedJob._id}`)
+        .set("Authorization", `Bearer ${secondToken}`)
+        .send({ title: "Hacked Title" })
+        .expect(404);
+
+      // Verify it didn't change in DB
+      const jobInDb = await Job.findById(savedJob._id);
+      expect(jobInDb.title).toBe(sampleJob.title);
+    });
+  });
+
+  describe("DELETE /api/jobs/:id", () => {
+    it("should delete a job if the user is the owner", async () => {
+      const job = new Job({ ...sampleJob, userId: user._id });
+      const savedJob = await job.save();
+
+      await api
+        .delete(`/api/jobs/${savedJob._id}`)
+        .set("Authorization", `Bearer ${token}`)
+        .expect(200);
+
+      const jobInDb = await Job.findById(savedJob._id);
+      expect(jobInDb).toBeNull();
+    });
+
+    it("should fail (404/Unauthorized) if trying to delete someone else's job", async () => {
+      // 1. Create second user
+      const secondUserRes = await api.post("/api/users/signup").send({
+        ...users[0],
+        username: "user2",
+        name: "User Two",
+      });
+      const secondToken = secondUserRes.body.token;
+
+      // 2. Original user owns the job
+      const job = new Job({ ...sampleJob, userId: user._id });
+      const savedJob = await job.save();
+
+      // 3. Second user tries to delete
+      await api
+        .delete(`/api/jobs/${savedJob._id}`)
+        .set("Authorization", `Bearer ${secondToken}`)
+        .expect(404);
+
+      // Verify job still exists
+      const jobInDb = await Job.findById(savedJob._id);
+      expect(jobInDb).not.toBeNull();
+    });
+  });
+});
 
 afterAll(async () => {
-  await mongoose.connection.close()
-})
+  await mongoose.connection.close();
+});
