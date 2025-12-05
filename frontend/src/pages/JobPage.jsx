@@ -31,18 +31,17 @@ const JobPage = () => {
   const onDeleteClick = async (id) => {
     try {
       const res = await fetch(`/api/jobs/${id}`, {
-        method: "DELETE",
-        headers: {
-        },
-      });
+        method: 'DELETE',
+        headers: {},
+      })
       if (!res.ok) {
-        throw new Error("Failed to delete job");
+        throw new Error('Failed to delete job')
       }
-      navigate("/");
+      navigate('/')
     } catch (error) {
-      console.error("Error deleting job:", error);
+      console.error('Error deleting job:', error)
     }
-  };
+  }
 
   return (
     <div className='job-preview'>
@@ -76,10 +75,8 @@ const JobPage = () => {
           )}
 
           <button onClick={() => onDeleteClick(job._id)}>delete</button>
+          <button onClick={() => navigate(`/edit-job/${job._id}`)}>edit</button>
         </>
-        
-          
-      
       )}
     </div>
   )
