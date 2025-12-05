@@ -3,7 +3,12 @@ const mongoose = require("mongoose");
 
 //GET / jobs;
 const getAllJobs = async (req, res) => {
-  res.send("getAllJobs");
+  try{
+    const jobs = await Job.find({});
+    res.status(200).json(jobs);
+  }catch(error){
+    res.status(500).json({error: "Server Error"})
+  }
 };
 
 // POST /jobs
