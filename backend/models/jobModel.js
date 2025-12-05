@@ -27,6 +27,7 @@ const jobSchema = new mongoose.Schema({
   }, // Job status (open/closed)
   applicationDeadline: { type: Date }, // Deadline for job applications
   requirements: [String], // List of required skills or qualifications
+  userId: { type: mongoose.Types.ObjectId, ref: "Users", required: true },
 });
 
 const Job = mongoose.model("Jobs", jobSchema);

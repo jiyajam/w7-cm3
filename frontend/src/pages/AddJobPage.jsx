@@ -66,10 +66,15 @@ const AddJobPage = () => {
         .map((p) => p.trim())
         .filter((p) => p.length > 0);
 
+      console.log(JSON.parse(localStorage.getItem("user"))?.token);
+
       const response = await fetch("/api/jobs", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${
+            JSON.parse(localStorage.getItem("user"))?.token
+          }`,
         },
         body: JSON.stringify({
           title,

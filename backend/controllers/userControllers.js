@@ -13,10 +13,26 @@ const generateToken = (_id) => {
 // @route   POST /api/users/signup
 // @access  Public
 const signupUser = async (req, res) => {
-  const { name, username, password, phone_number, gender, date_of_birth, addressCity, addressStreet,addressZipCode } = req.body;
+  const {
+    name,
+    username,
+    password,
+    phone_number,
+    gender,
+    date_of_birth,
+    address,
+  } = req.body;
 
   try {
-    if (!name || !username || !password || !phone_number || !gender || !date_of_birth || !addressCity || !addressStreet || !addressZipCode ){
+    if (
+      !name ||
+      !username ||
+      !password ||
+      !phone_number ||
+      !gender ||
+      !date_of_birth ||
+      !address
+    ) {
       res.status(400);
       throw new Error("Please add all fields");
     }
@@ -33,7 +49,19 @@ const signupUser = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, salt);
 
     // Create user
-    const user = await User.create({ ...req.body });
+    const user = await User.create({
+      name,
+      username,
+      password: hashedPassword,
+      phone_number,
+      gender,
+      date_of_birth,
+      address: {
+        street: address.street,
+        city: address.city,
+        zipCode: address.zipCode,
+      },
+    });
 
     if (user) {
       // console.log(user._id);

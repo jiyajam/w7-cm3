@@ -27,6 +27,7 @@ const createJob = async (req, res) => {
       applicationDeadline,
       requirements,
     } = req.body;
+    const userId = req.user._id;
     const response = await Job.create({
       title,
       type,
@@ -46,6 +47,7 @@ const createJob = async (req, res) => {
       status,
       applicationDeadline,
       requirements,
+      userId,
     });
     res.status(201).json(response);
   } catch (err) {
@@ -109,7 +111,7 @@ const deleteJob = async (req, res) => {
     }
   } catch (error) {
     res.status(500).json({ message: "Failed to delete job" });
-  } 
+  }
 };
 
 module.exports = {

@@ -1,4 +1,4 @@
-POST http://localhost:4000/api/users/signup
+POST http://localhost:4000/api/jobs
 Content-Type: application/json
 
 {
