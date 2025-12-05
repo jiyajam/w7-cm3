@@ -28,6 +28,22 @@ const JobPage = () => {
     fetchJob()
   }, [id])
 
+  const onDeleteClick = async (id) => {
+    try {
+      const res = await fetch(`/api/jobs/${id}`, {
+        method: "DELETE",
+        headers: {
+        },
+      });
+      if (!res.ok) {
+        throw new Error("Failed to delete job");
+      }
+      navigate("/");
+    } catch (error) {
+      console.error("Error deleting job:", error);
+    }
+  };
+
   return (
     <div className='job-preview'>
       {loading ? (
@@ -58,7 +74,12 @@ const JobPage = () => {
           {job.requirements && job.requirements.length > 0 && (
             <p>Requirements: {job.requirements.join(', ')}</p>
           )}
+
+          <button onClick={() => onDeleteClick(job._id)}>delete</button>
         </>
+        
+          
+      
       )}
     </div>
   )
