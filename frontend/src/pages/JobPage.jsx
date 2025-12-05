@@ -12,7 +12,14 @@ const JobPage = () => {
     const fetchJob = async () => {
       try {
         console.log('id: ', id)
-        const res = await fetch(`/api/jobs/${id}`)
+        const token = localStorage.getItem('token')// JWT token
+        const res = await fetch(`/api/jobs/${id}`,{
+          headers: { 
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token  }`, // include auth header  
+          },
+        })
+
         if (!res.ok) {
           throw new Error('Network response was not ok')
         }
@@ -30,16 +37,30 @@ const JobPage = () => {
 
   const onDeleteClick = async (id) => {
     try {
+      const token = localStorage.getItem('token') // JWT token
+      if (!token) {
+        alert('You are not logged in. Please log in to delete a job.')
+        return
+      }
+
       const res = await fetch(`/api/jobs/${id}`, {
         method: 'DELETE',
-        headers: {},
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`, // include token in header  
+        },
       })
+
       if (!res.ok) {
-        throw new Error('Failed to delete job')
+        const errorData = await res.json()
+        throw new Error(errorData.message || 'Failed to delete job')
       }
+
+      alert('Job deleted successfully!')
       navigate('/')
     } catch (error) {
       console.error('Error deleting job:', error)
+      alert(`Error: ${error.message}`)
     }
   }
 
