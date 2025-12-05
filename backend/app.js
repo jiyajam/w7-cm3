@@ -16,7 +16,6 @@ app.use(express.static('view'))
 
 app.use(cors())
 app.use(express.json())
-cd
 connectDB()
 // Use the jobRouter for all "/jobs" routes
 app.use('/api/jobs', jobRouter)
