@@ -1,15 +1,15 @@
-const Job = require('../models/jobModel')
-const mongoose = require('mongoose')
+const Job = require("../models/jobModel");
+const mongoose = require("mongoose");
 
 //GET / jobs;
 const getAllJobs = async (req, res) => {
   try {
-    const jobs = await Job.find({})
-    res.status(200).json(jobs)
+    const jobs = await Job.find({});
+    res.status(200).json(jobs);
   } catch (error) {
-    res.status(500).json({ error: 'Server Error' })
+    res.status(500).json({ error: "Server Error" });
   }
-}
+};
 
 // POST /jobs
 const createJob = async (req, res) => {
@@ -26,7 +26,7 @@ const createJob = async (req, res) => {
       status,
       applicationDeadline,
       requirements,
-    } = req.body
+    } = req.body;
     const response = await Job.create({
       title,
       type,
@@ -46,42 +46,56 @@ const createJob = async (req, res) => {
       status,
       applicationDeadline,
       requirements,
-    })
-    res.status(201).json(response)
+    });
+    res.status(201).json(response);
   } catch (err) {
-    res.status(500).json({ error: `Cannot create job: ${err.message}` })
+    res.status(500).json({ error: `Cannot create job: ${err.message}` });
   }
-}
+};
 
 // GET /jobs/:jobId
 const getJobById = async (req, res) => {
-  const { jobId } = req.params
+  const { jobId } = req.params;
 
   if (!mongoose.Types.ObjectId.isValid(jobId)) {
-    return res.status(400).json({ message: 'Invalid job ID' })
+    return res.status(400).json({ message: "Invalid job ID" });
   }
 
   try {
-    const job = await Job.findById(jobId)
+    const job = await Job.findById(jobId);
     if (job) {
-      res.status(200).json(job)
+      res.status(200).json(job);
     } else {
-      res.status(404).json({ message: 'Job not found' })
+      res.status(404).json({ message: "Job not found" });
     }
   } catch (error) {
-    res.status(500).json({ message: 'Failed to retrieve job' })
+    res.status(500).json({ message: "Failed to retrieve job" });
   }
-}
+};
 
 // PUT /jobs/:jobId
+
 const updateJob = async (req, res) => {
-  res.send('updateJob')
-}
+  res.send("updateJob");
+  try {
+    const job = await Job.findByIdAndUpdate(req.prams.id, req.body, {
+      new: true,
+      runValidators: true,
+    });
+
+    if (!job) {
+      return res.status(404).json({ message: "Job not found" });
+    }
+    res.json(job);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
 
 // DELETE /jobs/:jobId
 const deleteJob = async (req, res) => {
-  res.send('deleteJob')
-}
+  res.send("deleteJob");
+};
 
 module.exports = {
   getAllJobs,
@@ -89,4 +103,4 @@ module.exports = {
   createJob,
   updateJob,
   deleteJob,
-}
+};
