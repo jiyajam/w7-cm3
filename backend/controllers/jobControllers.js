@@ -3,17 +3,54 @@ const mongoose = require("mongoose");
 
 //GET / jobs;
 const getAllJobs = async (req, res) => {
-  try{
+  try {
     const jobs = await Job.find({});
     res.status(200).json(jobs);
-  }catch(error){
-    res.status(500).json({error: "Server Error"})
+  } catch (error) {
+    res.status(500).json({ error: "Server Error" });
   }
 };
 
 // POST /jobs
 const createJob = async (req, res) => {
-  res.send("createJob");
+  try {
+    const {
+      title,
+      type,
+      description,
+      company,
+      location,
+      salary,
+      experienceLevel,
+      postedDate,
+      status,
+      applicationDeadline,
+      requirements,
+    } = req.body;
+    const response = await Job.create({
+      title,
+      type,
+      description,
+      company: {
+        name: company.name,
+        contactEmail: company.contactEmail,
+        size: company.size,
+      },
+      location: {
+        city: location.city,
+        state: location.state,
+      },
+      salary,
+      experienceLevel,
+      postedDate,
+      status,
+      applicationDeadline,
+      requirements,
+    });
+    res.status(201).json(response);
+  } catch (err) {
+    res.status(500).json({ error: `Cannot create job: ${err.message}` });
+  }
 };
 
 // GET /jobs/:jobId
