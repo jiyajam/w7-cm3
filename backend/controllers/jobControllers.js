@@ -76,12 +76,16 @@ const getJobById = async (req, res) => {
 // PUT /jobs/:jobId
 
 const updateJob = async (req, res) => {
-  res.send("updateJob");
+  // res.send("updateJob");
   try {
-    const job = await Job.findByIdAndUpdate(req.prams.id, req.body, {
-      new: true,
-      runValidators: true,
-    });
+    const job = await Job.findOneAndUpdate(
+      { _id: req.params.jobId },
+      { ...req.body },
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
 
     if (!job) {
       return res.status(404).json({ message: "Job not found" });
@@ -109,7 +113,7 @@ const deleteJob = async (req, res) => {
     }
   } catch (error) {
     res.status(500).json({ message: "Failed to delete job" });
-  } 
+  }
 };
 
 module.exports = {
