@@ -5,31 +5,35 @@ const EditJobPage = () => {
   const { id } = useParams()
   const navigate = useNavigate()
 
-  // Loading + error states
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  // Form states
+  // Form state
   const [title, setTitle] = useState('')
   const [type, setType] = useState('Full-Time')
   const [description, setDescription] = useState('')
-
   const [companyName, setCompanyName] = useState('')
   const [contactEmail, setContactEmail] = useState('')
   const [companySize, setCompanySize] = useState('')
-
   const [locationCity, setLocationCity] = useState('')
   const [locationState, setLocationState] = useState('')
-
   const [salary, setSalary] = useState('')
   const [experienceLevel, setExperienceLevel] = useState('Entry')
   const [applicationDeadline, setApplicationDeadline] = useState('')
   const [requirements, setRequirements] = useState('')
 
+  // Fetch job by ID
   useEffect(() => {
     const fetchJob = async () => {
       try {
-        const res = await fetch(`/api/jobs/${id}`)
+        const token = localStorage.getItem('token') // JWT token
+        const res = await fetch(`http://localhost:3000/api/jobs/${id}`, {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`, // include auth header
+          },
+        })
+
         if (!res.ok) throw new Error('Failed to fetch job')
         const data = await res.json()
 
@@ -62,6 +66,7 @@ const EditJobPage = () => {
     fetchJob()
   }, [id])
 
+  // Submit update
   const submitForm = async (e) => {
     e.preventDefault()
 
@@ -85,9 +90,13 @@ const EditJobPage = () => {
     }
 
     try {
+      const token = JSON.parse(localStorage.getItem('user'))?.token // JWT token
       const res = await fetch(`/api/jobs/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`, // 🔑 token included
+        },
         body: JSON.stringify(updatedJob),
       })
 
@@ -104,8 +113,9 @@ const EditJobPage = () => {
 
   return (
     <div className='create'>
-      <h2>Update Job</h2>
+      <h2>Edit Job</h2>
       <form onSubmit={submitForm}>
+        {/* ... all your form fields remain the same ... */}
         <label>Job Title:</label>
         <input
           type='text'
@@ -113,7 +123,6 @@ const EditJobPage = () => {
           required
           onChange={(e) => setTitle(e.target.value)}
         />
-
         <label>Job Type:</label>
         <select value={type} onChange={(e) => setType(e.target.value)}>
           <option value='Full-Time'>Full-Time</option>
@@ -121,29 +130,25 @@ const EditJobPage = () => {
           <option value='Remote'>Remote</option>
           <option value='Internship'>Internship</option>
         </select>
-
         <label>Description:</label>
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
         />
 
-        <h3>Company</h3>
-
+        <h3>Company Info</h3>
         <label>Company Name:</label>
         <input
           type='text'
           value={companyName}
           onChange={(e) => setCompanyName(e.target.value)}
         />
-
         <label>Contact Email:</label>
         <input
           type='email'
           value={contactEmail}
           onChange={(e) => setContactEmail(e.target.value)}
         />
-
         <label>Company Size:</label>
         <input
           type='text'
@@ -158,7 +163,6 @@ const EditJobPage = () => {
           value={locationCity}
           onChange={(e) => setLocationCity(e.target.value)}
         />
-
         <label>State:</label>
         <input
           type='text'
@@ -167,14 +171,12 @@ const EditJobPage = () => {
         />
 
         <h3>Job Details</h3>
-
         <label>Salary:</label>
         <input
           type='text'
           value={salary}
           onChange={(e) => setSalary(e.target.value)}
         />
-
         <label>Experience Level:</label>
         <select
           value={experienceLevel}
@@ -183,14 +185,12 @@ const EditJobPage = () => {
           <option value='Mid'>Mid</option>
           <option value='Senior'>Senior</option>
         </select>
-
         <label>Application Deadline:</label>
         <input
           type='date'
           value={applicationDeadline}
           onChange={(e) => setApplicationDeadline(e.target.value)}
         />
-
         <label>Requirements:</label>
         <textarea
           value={requirements}

@@ -4,3 +4,11 @@ Content-Type: application/json
 {
     "name": "asdf"
 }
+
+###
+PUT http://localhost:4000/api/jobs
+Content-Type: application/json
+
+{
+    "name": "asdf"
+}
