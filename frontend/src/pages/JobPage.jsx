@@ -11,15 +11,7 @@ const JobPage = () => {
   useEffect(() => {
     const fetchJob = async () => {
       try {
-        console.log('id: ', id)
-        const token = localStorage.getItem('token')// JWT token
-        const res = await fetch(`/api/jobs/${id}`,{
-          headers: { 
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token  }`, // include auth header  
-          },
-        })
-
+        const res = await fetch(`/api/jobs/${id}`);
         if (!res.ok) {
           throw new Error('Network response was not ok')
         }
@@ -37,7 +29,8 @@ const JobPage = () => {
 
   const onDeleteClick = async (id) => {
     try {
-      const token = localStorage.getItem('token') // JWT token
+      const token = JSON.parse(localStorage.getItem("user"))?.token; // JWT token
+
       if (!token) {
         alert('You are not logged in. Please log in to delete a job.')
         return

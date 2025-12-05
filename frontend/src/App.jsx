@@ -6,8 +6,8 @@ import Navbar from './components/Navbar'
 import NotFoundPage from './pages/NotFoundPage'
 import JobPage from './pages/JobPage'
 import EditJobPage from './pages/EditJobPage'
-import Login from './components/Login'
-import Signup from './components/Signup'
+import Login from './pages/Login'
+import Signup from './pages/Signup'
 
 const App = () => {
   return (
